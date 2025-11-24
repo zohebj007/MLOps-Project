@@ -15,9 +15,9 @@ os.makedirs(os.path.dirname(output_val), exist_ok=True)
 
 # Load dataset
 df = pd.read_csv(input_path)
-
+df.drop(['SkinThickness','Insulin'], axis=1, inplace=True)
 # Replace 0s in selected columns with median values
-zero_as_missing = ["Glucose", "BloodPressure", "SkinThickness", "Insulin", "BMI"]
+zero_as_missing = ["Glucose", "BloodPressure", "BMI"]
 for col in zero_as_missing:
     df[col] = df[col].replace(0, np.nan)
     df[col].fillna(df[col].median(), inplace=True)
