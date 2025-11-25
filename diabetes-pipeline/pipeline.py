@@ -31,7 +31,7 @@ evaluation_output_uri = f"s3://{bucket}/{prefix}/output/evaluation"
 
 ########## PREPROCESSING STEP ##########
 sklearn_processor = SKLearnProcessor(
-    framework_version="0.23-1",
+    framework_version="1.2-1",
     role=role,
     instance_type="ml.m5.large",
     instance_count=1,

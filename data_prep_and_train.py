@@ -1,6 +1,6 @@
 # data_prep_and_train.py
 import pandas as pd
-import numpy as np
+#import numpy as np
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, roc_auc_score
@@ -26,14 +26,10 @@ df.drop(['SkinThickness','Insulin'], axis=1, inplace=True)
 # In this dataset, some features have 0 as placeholder for missing:
 zero_as_missing = ["Glucose", "BloodPressure", "BMI"]
 # Replace 0 with np.nan
-for col in zero_as_missing:
-    df[col] = df[col].replace(0, np.nan)
 
-# Fill missing with median (safe for small datasets)
 for col in zero_as_missing:
-    median = df[col].median()
-    df[col] = df[col].fillna(median)
-    print(f"Filled {col} missing with median {median}")
+    median_value = df[col].median()
+    df[col] = df[col].replace(0, median_value)
 
 # --- FEATURES / TARGET ---
 X = df.drop("Outcome", axis=1)  # Outcome is 0/1 (no/yes)
