@@ -12,9 +12,9 @@ from datetime import datetime
 
 # ------------------ CONFIG ------------------
 DATA_PATH = "data/diabetes.csv"   # path to your dataset (download from Kaggle)
-EXPERIMENT_NAME = "mlops-diabetes"
-MODEL_NAME = "mlops-diabetes"
-RUN_PREFIX = "mlops-diabetes"
+EXPERIMENT_NAME = "mlflow-test"
+MODEL_NAME = "mlops-diabetes-1"
+RUN_PREFIX = "mlflow-run-test"
 os.makedirs("data", exist_ok=True)
 # --------------------------------------------
 
@@ -57,6 +57,8 @@ def evaluate_model(model, X_test, y_test):
         "roc_auc": roc_auc_score(y_test, y_proba)
     }
     return metrics
+
+            
 
 
 def main():
