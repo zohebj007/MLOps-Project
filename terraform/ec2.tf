@@ -18,6 +18,7 @@ resource "aws_security_group" "ec2_sg" {
 }
 
 resource "aws_instance" "ec2" {
+  count                  = 2
   ami                    = "ami-0f58b397bc5c1f2e8" # Amazon Linux 2 (Mumbai)
   instance_type          = "t3.micro"
   subnet_id              = aws_subnet.public_1a.id
@@ -25,7 +26,7 @@ resource "aws_instance" "ec2" {
   key_name               = "linux-1"
 
   tags = {
-    Name = "tf-ec2"
+    Name = "tf-ec2-${count.index}"
   }
 }
 

@@ -1,26 +1,12 @@
-# Dockerfile.sagemaker (recommended)
-FROM 763104351884.dkr.ecr.ap-south-1.amazonaws.com/sklearn-inference:1.2-1
-
-WORKDIR /opt/program
-
-# Copy application code
-COPY app.py /opt/program/
-COPY templates /opt/program/templates
-
-# Copy model artefacts (model.joblib or model.tar.gz)
-COPY models /opt/ml/model
-
-# If model is model.tar.gz, extract it
-RUN if [ -f /opt/ml/model/model.tar.gz ]; then \
-      tar -xzf /opt/ml/model/model.tar.gz -C /opt/ml/model && \
-      rm -f /opt/ml/model/model.tar.gz ; \
-    fi
-
-# Install extra libraries your app needs (Flask, pandas etc.)
-# NOTE: do NOT re-install scikit-learn to avoid binary mismatch
-RUN pip install --no-cache-dir Flask pandas numpy joblib
-
-EXPOSE 5000
-ENV PYTHONUNBUFFERED=1
-
-CMD ["python", "/opt/program/app.py"]
+FROM python:3.10-slim
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY requirements.txt  /app/
+RUN pip install -r requirements.txt
+COPY app.py /app/
+COPY models/* /app/models/ 
+COPY templates /app/templates
+CMD ["python", "app.py"]
