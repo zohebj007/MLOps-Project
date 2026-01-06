@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: diabetes-ml
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: diabetes-ml
+  template:
+    metadata:
+      labels:
+        app: diabetes-ml
+    spec:
+      containers:
+        - name: diabetes-ml
+          image: diabetes-ml
+          ports:
+            - containerPort: 5000
+          volumeMounts:
+            - name: diabetes-ml
+              mountPath: /app/storage
+      volumes:
+        - name: diabetes-ml
+          persistentVolumeClaim:
+            claimName: diabetes-ml
