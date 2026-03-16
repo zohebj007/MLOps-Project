@@ -54,3 +54,123 @@ Click Add target.
 Target type: SageMaker pipeline
 
 Pipeline: select your pipeline name (e.g., eventbridge-triggering).
+
+
+#############################################################################################################################################################################################
+#############################################################################################################################################################################################
+
+
+
+if you want your pipeline to take new files like according to the time stamps so please follow the below processs
+
+Your pipeline currently probably uses a hardcoded S3 URI for input. To make it dynamic, you need to add a pipeline parameter and use it in the processing step.
+
+1.1 Add the Parameter Definition
+In your pipeline definition script (e.g., the one you run to upsert the pipeline), add:
+
+
+###########################################
+python
+from sagemaker.workflow.parameters import ParameterString
+
+input_data_param = ParameterString(
+    name="InputDataUri",                          # Name used in EventBridge
+    default_value="s3://main-sagemaker-ml-healthcare/mlops/diabetes.csv"  # fallback
+)
+
+
+############################################################
+
+1.2 Use the Parameter in the Processing Step
+Locate your ProcessingStep (or wherever you read the input file). Replace the hardcoded source with input_data_param:
+
+python
+ProcessingInput(
+    source=input_data_param,
+    destination="/opt/ml/processing/input",
+    ...
+)
+
+######################################################################################
+
+1.3 Include the Parameter in the Pipeline Definition
+When you instantiate the Pipeline, add the parameter to the parameters list:
+
+python
+pipeline = Pipeline(
+    name="eventbridge-triggering",
+    parameters=[input_data_param],
+    steps=[...],
+    sagemaker_session=pipeline_session
+)
+
+#########################################################################################
+
+
+Step 2: Update the Pipeline in SageMaker
+Run your pipeline script (the one with the modifications) once to upsert the new definition:
+
+python
+pipeline.upsert(role_arn=role)
+This registers the parameter in SageMaker. Now your pipeline is ready to accept a dynamic InputDataUri value.
+
+########################################################################################
+
+3.5 Configure Input Transformation (Critical)
+You must pass the S3 URI of the newly uploaded file to the pipeline parameter. Enable Input transformation and fill:
+
+Input Path
+Extract bucket name and object key:
+
+json
+{
+  "bucket": "$.detail.bucket.name",
+  "key": "$.detail.object.key"
+}
+#########################################################################################
+
+Input Template
+Build the S3 URI and map it to the pipeline parameter InputDataUri:
+
+json
+{
+  "InputDataUri": "s3://<bucket>/<key>"
+}
+(Some versions of the console require "s3://$.bucket/$.key". Try the first; if it fails, use the second.)
+
+Important: The parameter name in the template must exactly match the name you used in your pipeline code (InputDataUri).
+
+############################################################################################
+
+3.6 Set Up IAM Role
+EventBridge needs permission to start your pipeline.
+
+Under Role, choose Create a new role for this specific rule (recommended). The console will automatically create a role with the necessary trust policy and permission sagemaker:StartPipelineExecution on your pipeline ARN.
+
+If you prefer an existing role, ensure it has a policy like:
+
+json
+{
+    "Effect": "Allow",
+    "Action": "sagemaker:StartPipelineExecution",
+    "Resource": "arn:aws:sagemaker:ap-south-1:123456789012:pipeline/eventbridge-triggering"
+}
+and a trust policy for events.amazonaws.com.
+
+
+##################################################################################################
+
+3.7 Create the Rule
+Click Create. The rule is now active and will trigger on every matching S3 upload.
+
+#################################################################################################
+Step 4: Test the Automation
+Upload a test CSV file to your bucket (e.g., s3://main-sagemaker-ml-healthcare/mlops/test-data.csv).
+
+Go to SageMaker Studio → Pipelines → select your pipeline.
+
+Look for a new execution. It may take a minute to appear.
+
+Click the execution and go to the Parameters tab. You should see InputDataUri with the value s3://main-sagemaker-ml-healthcare/mlops/test-data.csv.
+
+Verify the pipeline steps run successfully and process that file.
