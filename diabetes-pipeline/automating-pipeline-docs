@@ -1,0 +1,56 @@
+Automating SageMaker Pipeline Execution with S3 Event Triggers
+Overview
+This guide explains how to set up an automated trigger that starts your SageMaker pipeline whenever a new file is uploaded to a specific Amazon S3 bucket (or folder). The trigger uses Amazon EventBridge to listen for S3 Object Created events and invokes your pipeline, passing the URI of the newly uploaded file as a parameter.
+
+By the end of this document, you will have a fully automated ML workflow that processes fresh data as soon as it arrives in S3.
+
+
+* Create the EventBridge Rule
+3.1 Open the EventBridge Console
+Navigate to Amazon EventBridge → Rules → Create rule.
+
+3.2 Configure Rule Basics
+Name: TriggerSageMakerOnNewData (or any meaningful name)
+
+Event bus: default
+
+Rule type: Rule with an event pattern
+
+3.3 Define the Event Pattern
+Choose Event source → AWS events or use the JSON editor.
+
+Option A: Use the form
+AWS service: Simple Storage Service (S3)
+
+Event type: Object Created
+
+Specific bucket(s) by name: main-sagemaker-ml-healthcare
+
+Optional: add a prefix filter (e.g., mlops/) to limit to a folder.
+
+Option B: Use JSON pattern
+Paste the following (adjust bucket and prefix as needed):
+
+json
+{
+  "source": ["aws.s3"],
+  "detail-type": ["Object Created"],
+  "detail": {
+    "bucket": {
+      "name": ["main-sagemaker-ml-healthcare"]
+    },
+    "object": {
+      "key": [{
+        "prefix": "mlops/"
+      }]
+    }
+  }
+}
+Note: If you omit the object filter, the rule will trigger for any file anywhere in the bucket.
+
+3.4 Add a Target
+Click Add target.
+
+Target type: SageMaker pipeline
+
+Pipeline: select your pipeline name (e.g., eventbridge-triggering).
